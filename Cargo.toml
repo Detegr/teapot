@@ -1,0 +1,10 @@
+[package]
+name = "teapot"
+version = "0.1.0"
+authors = ["Antti Keränen <detegr@gmail.com>"]
+
+[dependencies]
+glium = "*"
+genmesh = "*"
+obj = "*"
+cgmath = "*"
