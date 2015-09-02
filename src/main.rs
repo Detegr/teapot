@@ -19,6 +19,12 @@ fn to_matrix(m: &[[f32; 4]; 4]) -> cgmath::Matrix4<f32> {
     )
 }
 
+#[derive(Eq,PartialEq)]
+enum LightDir {
+    Left,
+    Right,
+}
+
 fn main() {
 
     use glium::DisplayBuild;
@@ -36,7 +42,19 @@ fn main() {
     let vbuffer = load_wavefront(&display, include_bytes!("../assets/teapot.obj"));
     let ibuffer = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
+    let mut light_dir = LightDir::Right;
+    let mut light_x: f32 = -10.0;
+
     loop {
+        light_x += if light_dir == LightDir::Right { 0.1 } else { -0.1 };
+        if light_x >= 10.0 {
+            light_dir = LightDir::Left;
+        }
+        if light_x <= -10.0 {
+            light_dir = LightDir::Right;
+        }
+        println!("{}", light_x);
+
         let mut tgt = display.draw();
         tgt.clear_color_and_depth((0.01, 0.01, 0.01, 1.0), 1.0);
         let model = to_matrix(&[
@@ -49,7 +67,7 @@ fn main() {
             m_perspective: camera.get_perspective(),
             m_view: camera.get_view(),
             m_model: model,
-            //m_normal: normal,
+            in_lightpos: [light_x, 0.0, -3.0],
         }, &glium::DrawParameters {
             depth_test: glium::DepthTest::IfLess,
             depth_write: true,
@@ -63,7 +81,6 @@ fn main() {
                 ev => camera.process_input(&ev),
             }
         }
-
         camera.update();
     }
 }
