@@ -1,5 +1,12 @@
 #[macro_use]
 extern crate glium;
+
+#[macro_use]
+extern crate ecs;
+use ecs::World;
+
+extern crate glium_text;
+
 extern crate cgmath;
 extern crate genmesh;
 extern crate obj;
@@ -10,14 +17,7 @@ use std::default::Default;
 use std::io::Read;
 use glium::Surface;
 
-fn to_matrix(m: &[[f32; 4]; 4]) -> cgmath::Matrix4<f32> {
-    cgmath::Matrix4::new(
-        m[0][0], m[0][1], m[0][2], m[0][3],
-        m[1][0], m[1][1], m[1][2], m[1][3],
-        m[2][0], m[2][1], m[2][2], m[2][3],
-        m[3][0], m[3][1], m[3][2], m[3][3],
-    )
-}
+use cgmath::FixedArray;
 
 #[derive(Eq,PartialEq)]
 enum LightDir {
@@ -32,13 +32,42 @@ fn main() {
                      .with_depth_buffer(24)
                      .build_glium()
                      .unwrap();
+    let text_system = glium_text::TextSystem::new(&display);
+    let font_file = match std::fs::File::open("/usr/share/fonts/TTF/arial.ttf") {
+        Ok(f) => f,
+        Err(_) => {
+            panic!("Could not open a font");
+        }
+    };
+    let font = glium_text::FontTexture::new(&display, &font_file, 24).unwrap();
+    let text = glium_text::TextDisplay::new(&text_system, &font, "Hello Teapot world!");
 
     let mut camera = support::camera::CameraState::new();
     let mut vert_shader = String::new();
-    std::fs::File::open("../assets/cel.vert").unwrap().read_to_string(&mut vert_shader).unwrap();
+    match std::fs::File::open("assets/cel.vert") {
+        Ok(mut f) => {
+            f.read_to_string(&mut vert_shader).unwrap();
+        },
+        Err(_) => {
+            panic!("Vertex shader not found");
+        }
+    };
     let mut frag_shader = String::new();
-    std::fs::File::open("../assets/cel.frag").unwrap().read_to_string(&mut frag_shader).unwrap();
-    let prog = glium::Program::from_source(&display, &vert_shader, &frag_shader, None).unwrap();
+    match std::fs::File::open("assets/cel.frag") {
+        Ok(mut f) => {
+            f.read_to_string(&mut frag_shader).unwrap();
+        }
+        Err(_) => {
+            panic!("Fragment shader not found");
+        }
+    }
+    let prog = match glium::Program::from_source(&display, &vert_shader, &frag_shader, None) {
+        Ok(prog) => prog,
+        Err(e) => {
+            println!("{}", e);
+            panic!("Failed to compile shaders");
+        }
+    };
     let vbuffer = load_wavefront(&display, include_bytes!("../assets/teapot.obj"));
     let ibuffer = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
@@ -57,7 +86,7 @@ fn main() {
 
         let mut tgt = display.draw();
         tgt.clear_color_and_depth((0.01, 0.01, 0.01, 1.0), 1.0);
-        let model = to_matrix(&[
+        let model = cgmath::Matrix4::from_fixed([
             [0.005, 0.0,   0.0,   0.0],
             [0.0,   0.005, 0.0,   0.0],
             [0.0,   0.0,   0.005, 0.0],
@@ -73,6 +102,7 @@ fn main() {
             depth_write: true,
             ..Default::default()
         }).unwrap();
+        glium_text::draw(&text, &text_system, &mut tgt, cgmath::Matrix4::identity().into_fixed(), (1.0, 1.0, 0.3, 1.0));
         tgt.finish().unwrap();
 
         for ev in display.poll_events() {

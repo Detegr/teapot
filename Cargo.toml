@@ -5,6 +5,8 @@ authors = ["Antti Keränen <detegr@gmail.com>"]
 
 [dependencies]
 glium = "*"
+glium_text = "*"
 genmesh = "*"
 obj = "*"
 cgmath = "*"
+ecs = "*"
