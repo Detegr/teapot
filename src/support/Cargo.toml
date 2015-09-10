@@ -1,13 +1,9 @@
 [package]
-name = "teapot"
+name = "support"
 version = "0.1.0"
 authors = ["Antti Keränen <detegr@gmail.com>"]
 
 [dependencies]
 glium = "*"
-glium_text = "*"
-cgmath = "*"
-ecs = "*"
-
-[dependencies.support]
-path = "src/support"
+genmesh = "*"
+obj = "*"
