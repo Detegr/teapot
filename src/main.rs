@@ -12,8 +12,6 @@ extern crate ecs;
 components! {
     struct Components {
         #[hot] position: Position,
-        #[hot] transformation: cgmath::Matrix4<f32>,
-        #[hot] gfx: glium::backend::glutin_backend::GlutinFacade,
         #[cold] light_dir: LightDir,
     }
 }
